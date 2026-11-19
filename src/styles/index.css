@@ -1,0 +1,178 @@
+@import "tailwindcss";
+@import "@fontsource/bodoni-moda/400.css";
+@import "@fontsource/bodoni-moda/400-italic.css";
+@import "@fontsource/bodoni-moda/500.css";
+@import "@fontsource/bodoni-moda/500-italic.css";
+@import "@fontsource/hanken-grotesk/300.css";
+@import "@fontsource/hanken-grotesk/400.css";
+@import "@fontsource/hanken-grotesk/500.css";
+@import "@fontsource/hanken-grotesk/600.css";
+@import "@fontsource/hanken-grotesk/700.css";
+
+/* ───────────── Design tokens MONARQUE ─────────────
+   Monde « maison de soirée » : noir profond, blanc cassé, serif didone à fort contraste
+   avec mots-clés en italique or ; le violet porte l'action et la sélection. */
+@theme {
+  --color-ink: #0a0a0b;          /* noir profond */
+  --color-ink-2: #121214;        /* noir secondaire */
+  --color-ink-3: #1b1b1e;        /* surfaces surélevées */
+  --color-line: #2c2c30;         /* filets */
+  --color-violet: #7628c8;       /* violet : actions */
+  --color-violet-hi: #a855f7;    /* violet lumineux : sélection */
+  --color-violet-deep: #32104d;
+  --color-gold: #c9a46a;         /* or : mots en italique */
+  --color-paper: #f6f3ee;        /* blanc cassé : texte sur noir */
+  --color-cream: #efebe4;        /* fond des sections claires */
+  --color-cream-ink: #141414;    /* texte sur fond clair */
+  --color-mist: #9a968f;         /* gris chaud */
+  --color-ok: #6fcf97;
+  --color-warn: #e8b55a;
+  --color-danger: #ec6a7f;
+
+  --font-display: "Bodoni Moda", "Didot", "Times New Roman", serif;
+  --font-sans: "Hanken Grotesk", system-ui, sans-serif;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+}
+
+@layer base {
+  html {
+    background: var(--color-ink);
+    color: var(--color-paper);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    scrollbar-color: #3a3a3f var(--color-ink);
+  }
+  body { min-height: 100dvh; background: var(--color-ink); overflow-x: hidden; }
+  ::selection { background: var(--color-gold); color: var(--color-ink); }
+  :focus-visible { outline: 1.5px solid var(--color-violet-hi); outline-offset: 3px; border-radius: 2px; }
+  input, select, textarea { caret-color: var(--color-violet-hi); }
+  a { text-underline-offset: 0.22em; }
+  h1, h2, h3 { text-wrap: balance; }
+  p { text-wrap: pretty; }
+  .tabular { font-variant-numeric: tabular-nums; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--color-ink); }
+  ::-webkit-scrollbar-thumb { background: #2c2c30; border-radius: 10px; border: 2px solid var(--color-ink); }
+  ::-webkit-scrollbar-thumb:hover { background: #45454b; }
+}
+
+@layer components {
+  /* Serif didone : tracking légèrement resserré, l'italique porte l'or */
+  .display {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 0.98;
+    letter-spacing: -0.015em;
+  }
+  .display-sm {
+    font-family: var(--font-display);
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.005em;
+  }
+  .display em, .display-sm em { font-style: italic; color: var(--color-gold); }
+  .on-cream .display em, .on-cream .display-sm em { color: #9a7438; }
+
+  .label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-mist);
+  }
+
+  /* Boutons : rectangles fins en capitales espacées, retour instantané à l'appui */
+  .btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.55rem;
+    min-height: 2.75rem; padding: 0 1.35rem;
+    border-radius: 3px;
+    font-weight: 600; font-size: 0.75rem; letter-spacing: 0.1em; text-transform: uppercase;
+    transition: transform 120ms ease-out, background-color 200ms ease, color 200ms ease, border-color 200ms ease, opacity 200ms;
+    user-select: none; -webkit-tap-highlight-color: transparent; white-space: nowrap;
+  }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-primary { background: var(--color-violet); color: var(--color-paper); }
+  .btn-primary:hover:not(:disabled) { background: #8636dc; }
+  .btn-ghost { border: 1px solid #4a4a50; color: var(--color-paper); }
+  .btn-ghost:hover:not(:disabled) { border-color: var(--color-paper); }
+  .btn-light { background: var(--color-paper); color: var(--color-ink); }
+  .btn-light:hover:not(:disabled) { background: #fff; }
+  .btn-sm { min-height: 2.25rem; padding: 0 0.95rem; font-size: 0.6875rem; }
+  .on-cream .btn-ghost { border-color: #b9b3a8; color: var(--color-cream-ink); }
+  .on-cream .btn-ghost:hover:not(:disabled) { border-color: var(--color-cream-ink); }
+
+  /* Bouton circulaire « Voir le menu → » du modèle */
+  .btn-round {
+    display: grid; place-items: center; width: 7.5rem; height: 7.5rem; border-radius: 999px;
+    border: 1px solid rgb(246 243 238 / 0.45); color: var(--color-paper);
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.06em;
+    transition: border-color 300ms, background-color 300ms, color 300ms, transform 120ms;
+  }
+  .btn-round:hover { border-color: var(--color-violet-hi); background: var(--color-violet); }
+  .btn-round:active { transform: scale(0.97); }
+
+  /* Lien « Choisir ↗ » */
+  .link-arrow { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.04em; }
+  .link-arrow svg { transition: transform 300ms var(--ease-out-expo); }
+  .link-arrow:hover svg { transform: translate(2px, -2px); }
+
+  .field {
+    width: 100%; min-height: 2.875rem; padding: 0.65rem 0.9rem;
+    background: var(--color-ink-2); border: 1px solid var(--color-line); border-radius: 3px;
+    color: var(--color-paper); transition: border-color 200ms, box-shadow 200ms;
+  }
+  .field::placeholder { color: #6c6963; }
+  .field:focus { outline: none; border-color: var(--color-violet-hi); box-shadow: 0 0 0 3px rgb(168 85 247 / 0.16); }
+  .field[aria-invalid="true"] { border-color: var(--color-danger); }
+  select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%239A968F' stroke-width='2'%3E%3Cpath d='M2 4l4 4 4-4'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 0.9rem center; padding-right: 2.25rem; }
+
+  /* Filtres : rectangles fins (« Among all categories ») */
+  .chip {
+    display: inline-flex; align-items: center; gap: 0.35rem;
+    min-height: 2.25rem; padding: 0 1rem; border-radius: 3px;
+    border: 1px solid #3c3c41; font-size: 0.75rem; font-weight: 500; letter-spacing: 0.02em;
+    color: var(--color-mist); white-space: nowrap; transition: all 200ms ease;
+  }
+  .chip:hover { color: var(--color-paper); border-color: #6a6a70; }
+  .chip[aria-pressed="true"], .chip[aria-selected="true"] { color: var(--color-paper); border-color: var(--color-paper); background: transparent; box-shadow: inset 0 0 0 0.5px var(--color-paper); }
+
+  .panel { background: var(--color-ink-2); border: 1px solid var(--color-line); border-radius: 4px; }
+
+  /* Ancien « rideau » : désormais un aplat noir sobre (transitions, menu mobile) */
+  .velvet { background-color: var(--color-ink); }
+
+  /* Vignette photo insérée dans un titre (« Food, [img] which cannot… ») */
+  .pill-img { display: inline-block; vertical-align: middle; width: 2.3em; height: 0.95em; border-radius: 999px; overflow: hidden; margin: 0 0.12em; transform: translateY(-0.06em); }
+  .pill-img img { width: 100%; height: 100%; object-fit: cover; }
+
+  .dotted-leader { flex: 1; border-bottom: 1px solid #2c2c30; transform: translateY(-0.3em); margin: 0 0.8rem; }
+  .marquee-track { display: flex; width: max-content; }
+  .hairline { border-top: 1px solid var(--color-line); }
+}
+
+/* Titre d'étape de la visite : remplacement en fondu montant */
+@keyframes walk-in { from { opacity: 0; transform: translateY(14px); filter: blur(4px); } to { opacity: 1; transform: none; filter: none; } }
+@media (prefers-reduced-motion: reduce) { [class*="walk-in"] { animation: none !important; } }
+
+/* Lettrage révélé par SplitText */
+.split-line { overflow: clip; padding-bottom: 0.08em; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass { backdrop-filter: none !important; background: var(--color-ink-2) !important; }
+}
+
+/* Impression : seul le billet est imprimé (« Télécharger le billet » → PDF) */
+@media print {
+  @page { margin: 12mm; }
+  html, body { background: #fff !important; }
+  header, nav, footer, [role="note"], .print\:hidden { display: none !important; }
+  .ticket { box-shadow: none !important; max-width: 100% !important; break-inside: avoid; }
+  main { padding: 0 !important; }
+}
