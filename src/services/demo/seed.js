@@ -57,6 +57,14 @@ const SLOTS = ['13:30', '16:15', '19:00', '21:45'];
 
 async function hashPassword(pw) {
   const data = new TextEncoder().encode(`monarque:${pw}`);
+  // crypto.subtle n'existe qu'en contexte sécurisé (https ou localhost) : ouvert via http://<ip-du-pc>,
+  // il manque et la base de démo ne s'initialisait pas.
+  // shortcut: empreinte FNV-1a non cryptographique en http simple, acceptable pour la démo uniquement (le vrai backend hache côté serveur).
+  if (!globalThis.crypto?.subtle) {
+    let h = 0x811c9dc5;
+    for (const b of data) { h ^= b; h = Math.imul(h, 0x01000193) >>> 0; }
+    return `fnv:${h.toString(16).padStart(8, '0')}`;
+  }
   const buf = await crypto.subtle.digest('SHA-256', data);
   return [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 }

@@ -123,7 +123,9 @@ export default function Walkthrough() {
     const measure = () => {
       const w = window.innerWidth;
       const h = window.innerHeight - 76;
-      setSize((s) => (s && Math.abs(s.w - w) < 40 && Math.abs(s.h - h) < 80 ? s : { w, h }));
+      // Seule la largeur compte : sur mobile la barre d'adresse change la hauteur pendant le scroll,
+      // ce qui reconstruisait la visite (retour aux portes) au milieu du parcours.
+      setSize((s) => (s && Math.abs(s.w - w) < 40 ? s : { w, h }));
     };
     measure();
     const onResize = () => { clearTimeout(t); t = setTimeout(measure, 250); };
@@ -178,8 +180,9 @@ export default function Walkthrough() {
   const metrics = useMemo(() => {
     if (!scenes || !size) return null;
     return scenes.map((sc) => {
-      const k = Math.min((size.w * 0.86) / sc.plan.width, (size.h * 0.74) / sc.plan.height);
-      return { W: sc.plan.width * k, H: sc.plan.height * k, k };
+      const narrow = size.w < 768; // téléphone : plan sur toute la largeur et zoom plus serré sur les zones
+      const k = Math.min((size.w * (narrow ? 0.98 : 0.86)) / sc.plan.width, (size.h * 0.74) / sc.plan.height);
+      return { W: sc.plan.width * k, H: sc.plan.height * k, k, boost: narrow ? 1.45 : 1 };
     });
   }, [scenes, size]);
 

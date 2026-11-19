@@ -5,8 +5,10 @@ import { ScrollTrigger, gsap } from './animationConfig';
  * Chaque étape = { x, y } (point regardé, en unités du plan), s (zoom), rx (inclinaison du sol, en degrés).
  * Le plan est un calque de taille W×H où 1 unité de plan = k pixels.
  */
-export function cameraTransform({ x, y, s, rx }, { W, H, k }) {
-  return `rotateX(${rx}deg) scale(${s}) translate(${W / 2 - x * k}px, ${H / 2 - y * k}px)`;
+export function cameraTransform({ x, y, s, rx }, { W, H, k, boost = 1 }) {
+  // boost (petits écrans) n'agit que sur les gros plans : la vue d'ensemble (s = 1) reste entière.
+  const zoom = 1 + (s - 1) * boost;
+  return `rotateX(${rx}deg) scale(${zoom}) translate(${W / 2 - x * k}px, ${H / 2 - y * k}px)`;
 }
 
 /** Point de vue depuis la porte : regard posé un peu à l'intérieur de la salle. */
