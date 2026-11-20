@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Component, Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, ChevronUp, X } from 'lucide-react';
 import { useAsync } from '../../hooks/useAsync';
@@ -13,6 +13,17 @@ import { formatDay, formatPrice, formatTime } from '../../utils/format';
 import { flipSummary, rollNumber } from '../../animations/reservationAnimations';
 import { shake } from '../../animations/interactionAnimations';
 
+// Three.js n'est chargé que si la vue 3D est ouverte.
+const CinemaHall3D = lazy(() => import('../../components/cinema3d/CinemaHall3D'));
+
+/** Si la 3D échoue (chargement, WebGL perdu), on revient au plan 2D plutôt qu'à une page vide. */
+class Fallback3D extends Component {
+  state = { failed: false };
+  static getDerivedStateFromError() { return { failed: true }; }
+  componentDidCatch(err) { console.warn('[salle 3D] indisponible :', err); this.props.onFail?.(); }
+  render() { return this.state.failed ? null : this.props.children; }
+}
+
 const MAX = 8;
 
 export default function SeatSelectionPage() {
@@ -23,6 +34,8 @@ export default function SeatSelectionPage() {
   const [avail, setAvail] = useState({ occupied: new Set(), locked: new Set() });
   const [selected, setSelected] = useState(() => new Set());
   const [highlight, setHighlight] = useState(null);
+  const webgl = useMemo(() => { try { return !!document.createElement('canvas').getContext('webgl2'); } catch { return false; } }, []);
+  const [view, setView] = useState(() => (webgl ? '3d' : 'plan'));
   const [busy, setBusy] = useState(false);
   const [sheet, setSheet] = useState(false);
   const summaryRef = useRef(null);
@@ -133,18 +146,41 @@ export default function SeatSelectionPage() {
 
       <div className="mt-6 grid gap-8 lg:grid-cols-[1fr_22rem]">
         <div className="min-w-0">
-          <div className="mb-4 flex flex-wrap items-center gap-2" role="group" aria-label="Mettre en avant une catégorie">
-            <button type="button" className="chip" aria-pressed={!highlight} onClick={() => setHighlight(null)}>Toutes</button>
-            {presentCats.map((c) => (
-              <button key={c} type="button" className="chip" aria-pressed={highlight === c} onClick={() => setHighlight(highlight === c ? null : c)}>
-                {SEAT_CATEGORIES[c].label} · {formatPrice(session.prices[c])}
-              </button>
-            ))}
+          <div className="mb-4 flex flex-wrap items-center gap-2">
+            <div role="tablist" aria-label="Mode d’affichage" className="mr-2 flex rounded-[4px] border border-line p-0.5">
+              {[['3d', 'Salle 3D'], ['plan', 'Plan']].map(([k, l]) => (
+                <button key={k} type="button" role="tab" aria-selected={view === k} disabled={k === '3d' && !webgl} onClick={() => setView(k)} className={`rounded-[3px] px-3.5 py-1.5 text-xs font-semibold uppercase tracking-[0.08em] transition-colors disabled:opacity-40 ${view === k ? 'bg-paper text-ink' : 'text-mist hover:text-paper'}`}>{l}</button>
+              ))}
+            </div>
+            {view === 'plan' && (
+              <div className="flex flex-wrap gap-2" role="group" aria-label="Mettre en avant une catégorie">
+                <button type="button" className="chip" aria-pressed={!highlight} onClick={() => setHighlight(null)}>Toutes</button>
+                {presentCats.map((c) => (
+                  <button key={c} type="button" className="chip" aria-pressed={highlight === c} onClick={() => setHighlight(highlight === c ? null : c)}>
+                    {SEAT_CATEGORIES[c].label} · {formatPrice(session.prices[c])}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="overflow-hidden rounded-[4px] border border-line bg-[radial-gradient(ellipse_at_50%_0%,#1d1030_0%,#0d0b12_60%)]">
-            <SeatMap plan={session.plan} occupied={avail.occupied} locked={avail.locked} selected={selected} onToggle={toggle} prices={session.prices} highlight={highlight} interactive={!started} />
+            {view === '3d' ? (
+              <Fallback3D onFail={() => { setView('plan'); toast.info('Salle 3D indisponible', 'Le plan de la salle est affiché à la place.'); }}>
+                <Suspense fallback={<div className="grid h-[min(72vh,680px)] min-h-[420px] place-items-center text-sm text-mist">Ouverture des portes de la salle…</div>}>
+                  <CinemaHall3D plan={session.plan} occupied={avail.occupied} locked={avail.locked} selected={selected} onToggle={toggle} prices={session.prices} film={session.film} interactive={!started} />
+                </Suspense>
+              </Fallback3D>
+            ) : (
+              <SeatMap plan={session.plan} occupied={avail.occupied} locked={avail.locked} selected={selected} onToggle={toggle} prices={session.prices} highlight={highlight} interactive={!started} />
+            )}
           </div>
-          <Legend items={SEAT_LEGEND} className="mt-4" />
+          {view === '3d' ? (
+            <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-mist" aria-label="Légende de la salle 3D">
+              {[['#4a1f73', 'Standard'], ['#7628c8', 'Premium'], ['#a8844a', 'VIP'], ['#e9d5ff', 'Votre sélection'], ['#26252b', 'Réservé (carton blanc posé)'], ['#6a5220', 'En cours de réservation']].map(([c, l]) => (
+                <li key={l} className="flex items-center gap-2"><span className="size-3 rounded-[2px]" style={{ background: c }} />{l}</li>
+              ))}
+            </ul>
+          ) : <Legend items={SEAT_LEGEND} className="mt-4" />}
         </div>
 
         <aside className="hidden lg:block">
